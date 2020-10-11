@@ -1,8 +1,6 @@
 # xDai - Honeyswap balancer
 
 from brownie import accounts, web3, Contract
-# from eth_account import Account
-# from web3 import Web3
 import requests
 import json
 import pickle
@@ -12,7 +10,7 @@ import sys
 import math
 import pprint
 
-acct = accounts.load('sandy')
+acct = accounts.load(your_account_name)
 
 portfolio = {
     'XDAI': 0.10,
