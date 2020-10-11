@@ -1,10 +1,8 @@
-# Aave Flash Loan Brownie Mix
-
-![Aave Banner](box-img-sm.png)
+# xDai HoneySwap Balancer Brownie Mix
 
 *Adapted from [aave/flashloan-box](https://github.com/aave/flashloan-box) by [mrdavey](https://github.com/mrdavey/).*
 
-This Brownie mix comes with everything you need to start [developing on flash loans](https://docs.aave.com/developers/tutorials/performing-a-flash-loan/...-in-your-project).
+This Brownie mix comes with everything you need to start building your own automated portfolio balancing.
 
 This mix is configured for use with [Ganache](https://github.com/trufflesuite/ganache-cli) on a [forked mainnet](https://eth-brownie.readthedocs.io/en/stable/network-management.html#using-a-forked-development-network).
 
