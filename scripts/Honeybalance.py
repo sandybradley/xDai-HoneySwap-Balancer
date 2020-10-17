@@ -262,7 +262,9 @@ def main():
                     pathAddresses,
                     toAdrress,
                     deadline)
-
+                if key == 'HNY':
+                    asset_contract.approve(
+                        honeyswap_contract, 0, {"from": acct})
                 asset_contract.approve(
                     honeyswap_contract, amountInMaxWei, {"from": acct})
                 Honeyswap_Contract.swapTokensForExactTokens(
