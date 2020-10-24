@@ -10,7 +10,7 @@ This Brownie framework comes with everything you need to start building your own
 2. Add xDai network to brownie
 
 ```bash
-brownie networks add Ethereum xdai host=https://dai.poa.network chainid=100
+brownie networks add Ethereum xdai host=https://dai.poa.network chainid=100 explorer=https://blockscout.com/poa/xdai
 ```
 
 3. Setup your account (import by private key)
