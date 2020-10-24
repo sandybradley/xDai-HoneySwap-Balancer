@@ -13,9 +13,11 @@ import pprint
 acct = accounts.load(your_account_name)
 
 portfolio = {
-    'XDAI': 0.10,
-    'WXDAI': 0.20,
-    'HNY': 0.70
+    'XDAI': 0.01,
+    'WXDAI': 0.09,
+    'HNY': 0.80,
+    'WETH': 0.05,
+    'LINK': 0.05
 }
 prices = {}
 
@@ -28,10 +30,19 @@ balancesusd = {}
 Contracts = {}
 decimals = {}
 
+
 ercAddresses['HNY'] = "0x71850b7e9ee3f13ab46d67167341e4bdc905eef9"
 ercAddresses['WXDAI'] = "0xe91d153e0b41518a2ce8dd3d7944fa863463a97d"
+ercAddresses['WBTC'] = "0x8e5bbbb09ed1ebde8674cda39a0c169401db4252"
+ercAddresses['WETH'] = "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1"
+ercAddresses['LINK'] = "0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2"
 ercAddresses['STAKE'] = "0xb7d311e2eb55f2f68a9440da38e7989210b9a05e"
 ercAddresses['xMOON'] = "0x1e16aa4df73d29c029d94ceda3e3114ec191e25a"
+
+implementationAddresses = {}
+implementationAddresses['WBTC'] = "0xf8D1677c8a0c961938bf2f9aDc3F3CFDA759A9d9"
+implementationAddresses['LINK'] = "0xf8d1677c8a0c961938bf2f9adc3f3cfda759a9d9"
+implementationAddresses['WETH'] = "0xf8d1677c8a0c961938bf2f9adc3f3cfda759a9d9"
 
 UniswapV2Factory = "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7"
 UniswapV2Router02 = "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77"
@@ -45,13 +56,56 @@ accAddress = acct.address
 print(accAddress)
 # print(web3.eth.chainId)
 
+abis = {}
+addresses = {}
+
 
 def getContracts():
-    global Contracts
-    for key, value in ercAddresses.items():
-        address = web3.toChecksumAddress(value)
-        abi = json.loads(getABI(address)['result'])
-        Contracts[key] = Contract.from_abi(key, address, abi)
+    global Contracts,  abis, addresses
+    try:
+        abis = pickle.load(open("abis.pickle", "rb"))
+        addresses = pickle.load(open("addresses.pickle", "rb"))
+        Contracts = pickle.load(open("Contracts.pickle", "rb"))
+        change = False
+        for key, value in ercAddresses.items():
+            if key in Contracts.keys():
+                print(key, addresses[key])
+            else:
+                change = True
+                address = web3.toChecksumAddress(value)
+                addresses[key] = address
+                if key in ['WBTC', 'WETH', 'LINK']:
+                    abi = json.loads(getABI(web3.toChecksumAddress(
+                        implementationAddresses[key]))['result'])
+                    abis[key] = abi
+                    Contracts[key] = Contract.from_abi(key, address, abi)
+
+                else:
+                    abi = json.loads(getABI(address)['result'])
+                    abis[key] = abi
+                    Contracts[key] = Contract.from_abi(key, address, abi)
+        if change == True:
+            pickle.dump(abis, open("abis.pickle", "wb"))
+            pickle.dump(addresses, open("addresses.pickle", "wb"))
+            pickle.dump(Contracts, open("Contracts.pickle", "wb"))
+    except (OSError, IOError) as e:
+
+        for key, value in ercAddresses.items():
+            address = web3.toChecksumAddress(value)
+            addresses[key] = address
+            if key in ['WBTC', 'WETH', 'LINK']:
+                abi = json.loads(getABI(web3.toChecksumAddress(
+                    implementationAddresses[key]))['result'])
+                abis[key] = abi
+                Contracts[key] = Contract.from_abi(key, address, abi)
+
+            else:
+                abi = json.loads(getABI(address)['result'])
+                abis[key] = abi
+                Contracts[key] = Contract.from_abi(key, address, abi)
+        pickle.dump(abis, open("abis.pickle", "wb"))
+        pickle.dump(addresses, open("addresses.pickle", "wb"))
+        pickle.dump(Contracts, open("Contracts.pickle", "wb"))
 
 
 def getABI(contract_address):
@@ -181,7 +235,7 @@ def main():
     # convert to checksum address
     getAddresses()
     # quote for 1 asset in usd
-    amountIn = 1 * 10 ** 18
+    # amountIn = 1 * 10 ** 18
     # use WXDAI as common market measure (assume WXDAI = $1)
     quote = 'WXDAI'
     # wxdai_abi = json.loads(getABI(contracts['WXDAI'])['result'])
@@ -198,7 +252,8 @@ def main():
             path = []
             path.append(contracts[asset])
             path.append(contracts[quote])
-
+            # quote for 1 asset in usd
+            amountIn = 1 * 10 ** decimals[key]
             amounts = honeyswap_join.functions.getAmountsOut(
                 amountIn, path).call()
             # print(amounts)
@@ -231,17 +286,17 @@ def main():
 
     # WXDAI as base
     # fill first
-    if diffs['XDAI'] < -1.0:
+    if diffs['XDAI'] < -4.0:
         # swap xDai for wxDai
         dummydiff = 0 - diffs['XDAI']
-        if dummydiff > 1.0:
+        if dummydiff > 4.0:
             amountWei = backtoWack(dummydiff, 18)
             print(amountWei)
             tx_hash = wxdai_contract.deposit(
                 {"from": acct,   "value": amountWei})
     for key, value in diffs.items():
         if key != 'XDAI' and key != 'WXDAI' and key != 'UNI-V2':
-            if value < -1.0:
+            if value < -4.0:
                 asset_contract = Contracts[key]
                 pathAddresses = []
                 pathAddresses.append(contracts[key])
@@ -251,7 +306,7 @@ def main():
                 amountOutWei = backtoWack(amountOut, 18)
                 amountInMax = amountOut / prices[key]
                 # slippage 1 %
-                amountInMax = amountInMax + amountInMax * 0.01
+                amountInMax = amountInMax + amountInMax * 0.02
                 amountInMaxWei = backtoWack(amountInMax, 18)
                 # 2 hour deadline
                 deadline = int(time.time() + 60 * 60 * 2)
@@ -262,6 +317,7 @@ def main():
                     pathAddresses,
                     toAdrress,
                     deadline)
+
                 if key == 'HNY':
                     asset_contract.approve(
                         honeyswap_contract, 0, {"from": acct})
@@ -273,17 +329,17 @@ def main():
                     pathAddresses,
                     toAdrress,
                     deadline,
-                    {"from": acct, "gas_limit": 12487782, "gas_price": 1000000000})
+                    {"from": acct, "gas_limit": 12487780, "gas_price": 1000000000})
     for key, value in diffs.items():
         if key != 'XDAI' and key != 'WXDAI' and key != 'UNI-V2':
-            if value > 1.0:
+            if value > 4.0:
                 pathAddresses = []
                 pathAddresses.append(contracts[quote])
                 pathAddresses.append(contracts[key])
                 toAdrress = web3.toChecksumAddress(accAddress)
                 amountOutMin = value / prices[key]
                 # slippage 1 %
-                amountOutMin = amountOutMin - amountOutMin * 0.01
+                amountOutMin = amountOutMin - amountOutMin * 0.02
                 amountOutMinWei = backtoWack(amountOutMin, 18)
                 amountIn = value
                 amountInWei = backtoWack(amountIn, 18)
@@ -296,6 +352,7 @@ def main():
                     pathAddresses,
                     toAdrress,
                     deadline)
+
                 wxdai_contract.approve(
                     honeyswap_contract, amountInWei, {"from": acct})
                 Honeyswap_Contract.swapExactTokensForTokens(
@@ -304,8 +361,8 @@ def main():
                     pathAddresses,
                     toAdrress,
                     deadline,
-                    {"from": acct, "gas_limit": 12487782, "gas_price": 1000000000})
-    if diffs['XDAI'] > 1.0:
+                    {"from": acct, "gas_limit": 12487780, "gas_price": 1000000000})
+    if diffs['XDAI'] > 4.0:
         # swap wxDai for xDai
         amountWei = backtoWack(diffs['XDAI'], 18)
         print(amountWei)
