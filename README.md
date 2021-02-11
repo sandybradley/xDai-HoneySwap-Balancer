@@ -1,4 +1,4 @@
-# xDai HoneySwap Balancer Brownie Mix
+# xDai HoneySwap Balancer
 
 This Brownie framework comes with everything you need to start building your own automated portfolio balancer on the xDai network using honeyswap exchange. Motivation is led by decentralised balancing with low gas fees.
 
